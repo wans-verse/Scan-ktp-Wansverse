@@ -1,0 +1,37 @@
+name: Build APK
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Siapkan proyek dari app.zip
+        run: |
+          mkdir www && unzip -o app.zip -d www
+          cat > package.json <<'JSON'
+          {"name":"ktp-scan","version":"1.0.0","private":true,"dependencies":{"@capacitor/android":"^7.0.0","@capacitor/cli":"^7.0.0","@capacitor/core":"^7.0.0"}}
+          JSON
+          cat > capacitor.config.json <<'JSON'
+          {"appId":"com.iji.ktpscan","appName":"Scan KTP","webDir":"www"}
+          JSON
+      - run: npm install
+      - run: npx cap add android
+      - name: Izin kamera
+        run: |
+          sed -i 's#<application#<uses-permission android:name="android.permission.CAMERA" />\n    <uses-feature android:name="android.hardware.camera" android:required="false" />\n    <application#' android/app/src/main/AndroidManifest.xml
+      - run: npx cap sync android
+      - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Scan-KTP-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
