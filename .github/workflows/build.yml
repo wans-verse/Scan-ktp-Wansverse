@@ -15,9 +15,9 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - name: Siapkan proyek dari app.zip
+      - name: Siapkan proyek
         run: |
-          mkdir www && unzip -o app.zip -d www
+          mkdir www && cp index.html www/index.html
           cat > package.json <<'JSON'
           {"name":"ktp-scan","version":"1.0.0","private":true,"dependencies":{"@capacitor/android":"^7.0.0","@capacitor/cli":"^7.0.0","@capacitor/core":"^7.0.0"}}
           JSON
