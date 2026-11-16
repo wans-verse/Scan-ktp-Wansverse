@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Scan KTP</title>
+<style>
+:root{color-scheme:light dark;--bg1:#e8eefc;--bg2:#f5efff;--tx:#0b0b0f;--mut:#6b6f7b;--glass:rgba(255,255,255,.55);--edge:rgba(255,255,255,.75);--row:rgba(255,255,255,.62);--sep:rgba(60,60,67,.16);--ac:#007aff;--ok:#30d158;--sh:0 10px 40px rgba(20,30,80,.12)}
+@media (prefers-color-scheme:dark){:root{--bg1:#05070f;--bg2:#120f26;--tx:#f5f5f7;--mut:#9a9ca8;--glass:rgba(44,46,64,.5);--edge:rgba(255,255,255,.14);--row:rgba(44,46,64,.55);--sep:rgba(255,255,255,.12);--ac:#0a84ff;--sh:0 10px 40px rgba(0,0,0,.5)}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;min-height:100vh;font:17px/1.3 -apple-system,"SF Pro Text","SF Pro Display",system-ui,"Segoe UI",Roboto,sans-serif;color:var(--tx);-webkit-font-smoothing:antialiased;
+ background:radial-gradient(800px 560px at 5% -8%,rgba(10,132,255,.30),transparent 60%),radial-gradient(640px 480px at 105% 18%,rgba(191,90,242,.24),transparent 60%),linear-gradient(var(--bg1),var(--bg2)) fixed;
+ padding:max(10px,env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom))}
+main{max-width:520px;margin:0 auto}
+.glass{background:var(--glass);-webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);border:1px solid var(--edge);box-shadow:var(--sh),inset 0 1px 0 rgba(255,255,255,.3)}
+header{padding:14px 6px 12px}
+header p{margin:0;color:var(--mut);font-size:15px}
+h1{margin:0;font:700 34px/1.1 -apple-system,"SF Pro Display",system-ui,sans-serif;letter-spacing:-.6px}
+h3{font-size:13px;font-weight:500;color:var(--mut);margin:22px 18px 8px}
+#stage{position:relative;width:100%;aspect-ratio:3/4;background:#05070f;border-radius:36px;overflow:hidden;box-shadow:var(--sh)}
+#vid{width:100%;height:100%;object-fit:cover;display:block}
+#frame{position:absolute;left:5%;width:90%;aspect-ratio:1.586;top:50%;transform:translateY(-50%);border-radius:18px;overflow:hidden;box-shadow:0 0 0 999px rgba(0,0,0,.5);transition:box-shadow .4s}
+.c{position:absolute;width:30px;height:30px;border:3.5px solid #fff;transition:border-color .3s}
+.tl{top:0;left:0;border-right:0;border-bottom:0;border-radius:18px 0 0 0}
+.tr{top:0;right:0;border-left:0;border-bottom:0;border-radius:0 18px 0 0}
+.bl{bottom:0;left:0;border-right:0;border-top:0;border-radius:0 0 0 18px}
+.br{bottom:0;right:0;border-left:0;border-top:0;border-radius:0 0 18px 0}
+.pf{position:absolute;left:70%;top:24%;width:26%;height:52%;border:1.5px dashed rgba(255,255,255,.8);border-radius:12px;display:grid;place-items:center;font-size:12px;color:rgba(255,255,255,.85);background:rgba(255,255,255,.06)}
+.nk{position:absolute;left:8%;top:16%;width:70%;height:11%;border:1px dashed rgba(255,255,255,.45);border-radius:8px}
+.sl{position:absolute;left:0;right:0;top:-80px;height:80px;background:linear-gradient(to bottom,transparent,rgba(120,190,255,.38));border-bottom:2px solid rgba(255,255,255,.95);box-shadow:0 8px 24px 2px rgba(10,132,255,.7);display:none}
+.live .sl{display:block;animation:sc 2.2s cubic-bezier(.45,.05,.55,.95) infinite}
+@keyframes sc{from{top:-80px}to{top:100%}}
+.ok .c{border-color:var(--ok)}
+.ok{box-shadow:0 0 0 999px rgba(0,30,10,.55)!important}
+#hint{position:absolute;top:14px;left:50%;transform:translateX(-50%);white-space:nowrap;padding:8px 16px;border-radius:20px;font-size:13px;color:#fff;background:rgba(30,30,40,.45)}
+#st{margin:14px 0 0;padding:12px 18px;border-radius:22px;font-size:15px;color:var(--mut);text-align:center}
+#bar{height:4px;background:var(--sep);border-radius:2px;overflow:hidden;margin:12px 20px 0;display:none}
+#bar i{display:block;height:100%;width:0;background:var(--ac);transition:width .2s}
+.row{display:flex;gap:10px;margin-top:14px}
+button,label.btn{flex:1;height:54px;border:0;border-radius:27px;font:600 17px -apple-system,"SF Pro Text",system-ui,sans-serif;display:grid;place-items:center;cursor:pointer;background:var(--ac);color:#fff;transition:transform .15s,opacity .15s}
+button:active,label.btn:active{transform:scale(.96);opacity:.85}
+button.stop{background:#ff453a}
+label.sec{color:var(--ac)}
+input[type=file]{display:none}
+.grp{background:var(--row);-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);border:1px solid var(--edge);border-radius:26px;overflow:hidden}
+.r{display:flex;align-items:center;gap:12px;padding:13px 18px;border-top:.5px solid var(--sep)}
+.r:first-child{border-top:0}
+.r span{flex:0 0 36%;color:var(--mut);font-size:15px}
+.r input,.r textarea{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--tx);font:inherit;text-align:right;resize:none;padding:0}
+#snapimg{width:100%;border-radius:22px;margin-top:18px;display:none}
+.seg{display:flex;border-radius:24px;overflow:hidden;margin-top:18px}
+.seg button{border-radius:0;height:50px;background:none;color:var(--ac);border-left:.5px solid var(--sep)}
+.seg button:first-child{border-left:0}
+details{margin:16px 18px 0;color:var(--mut);font-size:14px}pre{white-space:pre-wrap;font-size:12px}
+.warn{font-size:12px;color:var(--mut);margin:22px 12px 0;text-align:center;line-height:1.4}
+@media (prefers-reduced-motion:reduce){.live .sl{animation-duration:5s}}
+</style>
+</head>
+<body>
+<main>
+<header><p>Pemindai identitas</p><h1>Scan KTP</h1></header>
+<div id="stage">
+  <video id="vid" playsinline muted autoplay></video>
+  <div id="frame">
+    <i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>
+    <div class="nk"></div><div class="pf">Foto</div><div class="sl"></div>
+  </div>
+  <div id="hint">Pas-kan KTP di dalam bingkai</div>
+</div>
+<div id="bar"><i></i></div>
+<div id="st" class="glass">Tekan Mulai Scan, lalu arahkan KTP ke bingkai.</div>
+<div class="row">
+  <button id="go">Mulai Scan</button>
+  <label class="btn sec glass">Galeri<input id="gal" type="file" accept="image/*"></label>
+</div>
+<section id="res" style="display:none">
+  <div id="form"></div>
+  <img id="snapimg" alt="">
+  <div class="seg glass"><button id="cp">Salin</button><button id="js">JSON</button><button id="cs">CSV</button></div>
+  <details><summary>Teks mentah OCR</summary><pre id="raw"></pre></details>
+</section>
+<p class="warn">Gambar diproses di perangkat dan tidak dikirim ke server. Hasil OCR bisa salah, periksa dan edit sebelum dipakai. Data KTP adalah data pribadi, simpan seperlunya sesuai UU PDP. Pertama kali dipakai butuh internet untuk mengunduh mesin OCR.</p>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js"></script>
+<script>
+const FIELDS=[["nik","NIK"],["nama","Nama"],["ttl","Tempat/Tgl Lahir"],["jk","Jenis Kelamin"],["goldar","Gol. Darah"],["alamat","Alamat"],["rtrw","RT/RW"],["kel","Kel/Desa"],["kec","Kecamatan"],["agama","Agama"],["status","Status Perkawinan"],["pekerjaan","Pekerjaan"],["wn","Kewarganegaraan"],["berlaku","Berlaku Hingga"],["provinsi","Provinsi"],["kota","Kabupaten/Kota"]];
+const CORE=["nama","ttl","jk","alamat","kel","kec","agama","status","pekerjaan","wn"];
+const LBL={nama:"nama",ttl:"tempat/tgl lahir",jk:"jenis kelamin",goldar:"gol. darah",alamat:"alamat",rtrw:"rt/rw",kel:"kel/desa",kec:"kecamatan",agama:"agama",status:"status perkawinan",pekerjaan:"pekerjaan",wn:"kewarganegaraan",berlaku:"berlaku hingga"};
+const RATIO=85.6/53.98;
+const $=id=>document.getElementById(id);
+const vid=$("vid"),frame=$("frame");
+const GRP=[["Identitas",["nik","nama","ttl","jk","goldar"]],["Alamat",["alamat","rtrw","kel","kec"]],["Lainnya",["agama","status","pekerjaan","wn","berlaku"]],["Wilayah",["provinsi","kota"]]];
+const LB=Object.fromEntries(FIELDS);
+$("form").innerHTML=GRP.map(([t,ks])=>`<h3>${t}</h3><div class="grp">${ks.map(k=>`<label class="r"><span>${LB[k]}</span>${k=="alamat"?`<textarea id="f_${k}" rows="2"></textarea>`:`<input id="f_${k}" autocomplete="off">`}</label>`).join("")}</div>`).join("");
+const V={},dirty=new Set();
+FIELDS.forEach(([k])=>{V[k]={};$("f_"+k).addEventListener("input",()=>dirty.add(k))});
+let live=false,cyc=0,skip=0,stream=null,last=null,wTxt,wNik;
+
+/* ---------- util teks ---------- */
+function lev(a,b){const m=a.length,n=b.length,d=[];for(let i=0;i<=m;i++)d[i]=[i];for(let j=1;j<=n;j++)d[0][j]=j;
+ for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]==b[j-1]?0:1));return d[m][n]}
+function snap(v,L){let b=v,bd=.36;for(const x of L){const d=lev(v,x)/x.length;if(d<bd){bd=d;b=x}}return b}
+function fixDigits(s){return s.replace(/[OoQD]/g,"0").replace(/[Il|!]/g,"1").replace(/[Zz]/g,"2").replace(/[Ss]/g,"5").replace(/b/g,"6").replace(/B/g,"8").replace(/\D/g,"")}
+function okNik(d){if(!/^\d{16}$/.test(d))return 0;const p=+d.slice(0,2),dd=+d.slice(6,8),mm=+d.slice(8,10);return p>=11&&p<=97&&mm>=1&&mm<=12&&((dd>=1&&dd<=31)||(dd>=41&&dd<=71))}
+function pickNik(t){const d=t.replace(/\D/g,"");for(let i=0;i+16<=d.length;i++){const x=d.slice(i,i+16);if(okNik(x))return x}return ""}
+function nikFrom(text){for(const ln of text.split("\n")){const m=ln.match(/[0-9OoIl|DSBZ]{14,20}/g)||[];for(const x of m){const n=pickNik(fixDigits(x));if(n)return n}}return ""}
+
+/* cocokkan label di awal baris (toleran salah baca) */
+function lab(s){const t0=s.toLowerCase();let best=null,bd=9,bl=0;
+ for(const k in LBL){const L=LBL[k];for(const t of [L.length-1,L.length,L.length+1]){const d=lev(t0.slice(0,t),L)/L.length;if(d<bd){bd=d;best=k;bl=t}}}
+ return bd<=.3?{k:best,len:bl}:null}
+function val(s,l){const ci=s.indexOf(":");const v=(ci>=0&&ci<=l.len+4)?s.slice(ci+1):s.slice(l.len);return v.replace(/^[\s:;.,\-_|=]+/,"").replace(/[|_]+$/,"").trim()}
+
+function parse(text){
+ const o={};FIELDS.forEach(([k])=>o[k]="");
+ o.nik=nikFrom(text);
+ for(const ln of text.split("\n").map(s=>s.trim()).filter(s=>s.length>2)){
+  const s=ln.replace(/^[^A-Za-z]+/,""),lo=s.toLowerCase();
+  if(!o.provinsi&&lev(lo.slice(0,8),"provinsi")<=2){o.provinsi=s.slice(8).replace(/^[\s:.\-]+/,"").toUpperCase();continue}
+  if(!o.kota&&(lev(lo.slice(0,9),"kabupaten")<=2||lo.slice(0,4)=="kota")){o.kota=s.toUpperCase();continue}
+  const l=lab(s);if(!l||o[l.k])continue;
+  let v=val(s,l);
+  if(l.k=="jk"){
+   const m=v.match(/l[a4]k|p[e3]r/i),g=s.match(/d[a4]r[a4]h\s*[:;.]?\s*(AB|A|B|O|0)(?![A-Za-z])/i);
+   if(g&&!o.goldar)o.goldar=g[1].toUpperCase().replace("0","O");
+   v=m?(/^l/i.test(m[0])?"LAKI-LAKI":"PEREMPUAN"):"";
+  }else if(l.k=="goldar"){v=(v.toUpperCase().replace(/0/g,"O").match(/AB|A|B|O/)||[""])[0]}
+  else if(l.k=="rtrw"){const m=v.replace(/[Oo]/g,"0").replace(/[Il|]/g,"1").match(/(\d{1,3})\s*[\/\\|]\s*(\d{1,3})/);v=m?m[1].padStart(3,"0")+"/"+m[2].padStart(3,"0"):v}
+  else{v=v.toUpperCase();
+   if(l.k=="agama")v=snap(v,["ISLAM","KRISTEN","KATOLIK","HINDU","BUDDHA","KONGHUCU"]);
+   if(l.k=="status")v=snap(v,["BELUM KAWIN","KAWIN","CERAI HIDUP","CERAI MATI"]);
+   if(l.k=="wn")v=snap(v,["WNI","WNA"]);
+   if(l.k=="berlaku")v=snap(v,["SEUMUR HIDUP"]);}
+  o[l.k]=v;
+ }
+ return o;
+}
+
+/* ---------- gambar ---------- */
+function bin(c,win=51,C=12){ // threshold lokal (tahan cahaya tidak rata)
+ const w=c.width,h=c.height,x=c.getContext("2d"),d=x.getImageData(0,0,w,h),p=d.data,g=new Float32Array(w*h);
+ for(let i=0;i<w*h;i++)g[i]=.299*p[4*i]+.587*p[4*i+1]+.114*p[4*i+2];
+ const I=new Float64Array((w+1)*(h+1));
+ for(let y=0;y<h;y++){let r=0;for(let i=0;i<w;i++){r+=g[y*w+i];I[(y+1)*(w+1)+i+1]=I[y*(w+1)+i+1]+r}}
+ const k=win>>1;
+ for(let y=0;y<h;y++){const y0=Math.max(0,y-k),y1=Math.min(h,y+k+1);
+  for(let i=0;i<w;i++){const x0=Math.max(0,i-k),x1=Math.min(w,i+k+1);
+   const m=(I[y1*(w+1)+x1]-I[y0*(w+1)+x1]-I[y1*(w+1)+x0]+I[y0*(w+1)+x0])/((x1-x0)*(y1-y0));
+   const v=g[y*w+i]<m-C?0:255,j=4*(y*w+i);p[j]=p[j+1]=p[j+2]=v}}
+ x.putImageData(d,0,0);return c}
+function sub(card,a,b,c,d){const W=card.width,H=card.height,o=document.createElement("canvas");
+ o.width=Math.round((c-a)*W);o.height=Math.round((d-b)*H);
+ o.getContext("2d").drawImage(card,a*W,b*H,o.width,o.height,0,0,o.width,o.height);return o}
+function sharp(c){const w=240,h=Math.round(w*c.height/c.width),t=document.createElement("canvas");t.width=w;t.height=h;
+ const x=t.getContext("2d");x.drawImage(c,0,0,w,h);const p=x.getImageData(0,0,w,h).data;let s=0,n=0;
+ for(let i=0;i<w*h-1;i++){if((i+1)%w==0)continue;s+=Math.abs(p[4*i+1]-p[4*i+5]);n++}return s/n}
+
+/* ambil isi bingkai dari video (sesuai posisi bingkai di layar) */
+function cropCard(){
+ const vw=vid.videoWidth,vh=vid.videoHeight;if(!vw)return null;
+ const sr=$("stage").getBoundingClientRect(),fr=frame.getBoundingClientRect();
+ const sc=Math.max(sr.width/vw,sr.height/vh),ox=(vw*sc-sr.width)/2,oy=(vh*sc-sr.height)/2;
+ const c=document.createElement("canvas");c.width=1200;c.height=Math.round(1200/RATIO);
+ c.getContext("2d").drawImage(vid,(fr.left-sr.left+ox)/sc,(fr.top-sr.top+oy)/sc,fr.width/sc,fr.height/sc,0,0,c.width,c.height);
+ return c}
+
+/* ---------- OCR per zona ---------- */
+async function initOcr(){
+ if(wTxt)return;
+ $("bar").style.display="block";
+ const lg=m=>{if(m.progress!=null&&/load|init/.test(m.status)){$("bar").firstElementChild.style.width=Math.round(m.progress*100)+"%";$("st").textContent="Menyiapkan OCR… "+Math.round(m.progress*100)+"%"}};
+ const [a,b]=await Promise.all([Tesseract.createWorker("ind",1,{logger:lg}),Tesseract.createWorker("ind",1,{logger:lg})]);
+ await a.setParameters({tessedit_pageseg_mode:"6",preserve_interword_spaces:"1"});
+ await b.setParameters({tessedit_pageseg_mode:"7",tessedit_char_whitelist:"0123456789"});
+ wTxt=a;wNik=b;$("bar").style.display="none"}
+const vote=(k,v,w=1)=>{if(v)V[k][v]=(V[k][v]||0)+w};
+const best=k=>{let b="",c=0;for(const v in V[k])if(V[k][v]>c){c=V[k][v];b=v}return b};
+async function pass(card){
+ if(!Object.values(V.nik).some(x=>x>=2)){ // NIK: zona sendiri, hanya angka
+  const r=await wNik.recognize(bin(sub(card,.08,.13,.80,.29)));vote("nik",pickNik(r.data.text))}
+ if(!best("provinsi")||!best("kota")){
+  const r=await wTxt.recognize(bin(sub(card,0,0,1,.16)));const o=parse(r.data.text);vote("provinsi",o.provinsi);vote("kota",o.kota)}
+ const r=await wTxt.recognize(bin(sub(card,0,.27,.70,1))); // badan data, tanpa foto
+ $("raw").textContent=r.data.text;
+ const o=parse(r.data.text);FIELDS.forEach(([k])=>{if(k!="nik")vote(k,o[k])});cyc++}
+function render(){
+ FIELDS.forEach(([k])=>{if(!dirty.has(k)){const b=best(k);if(b)$("f_"+k).value=b}});
+ const n=best("nik");
+ if(n&&!dirty.has("jk")&&!best("jk"))$("f_jk").value=+n.slice(6,8)>40?"PEREMPUAN":"LAKI-LAKI"; // dari NIK
+ const c=FIELDS.filter(([k])=>$("f_"+k).value.trim()).length;
+ $("res").style.display=c?"block":"none";return c}
+function reset(){FIELDS.forEach(([k])=>{V[k]={};$("f_"+k).value=""});dirty.clear();cyc=0;skip=0;last=null;
+ frame.classList.remove("ok");$("res").style.display="none";$("snapimg").style.display="none"}
+
+/* ---------- kamera & loop scan ---------- */
+function stopCam(){stream&&stream.getTracks().forEach(t=>t.stop());stream=null;vid.srcObject=null}
+function stopLive(){live=false;stopCam();frame.classList.remove("live");$("go").textContent="Mulai Scan";$("go").classList.remove("stop")}
+function finish(){stopLive();frame.classList.add("ok");navigator.vibrate&&navigator.vibrate(40);$("st").textContent="Selesai. Periksa & edit hasilnya.";
+ if(last){$("snapimg").src=last.toDataURL("image/jpeg",.8);$("snapimg").style.display="block"}
+ $("res").scrollIntoView({behavior:"smooth"})}
+async function loop(){
+ if(!live)return;
+ try{
+  const c=cropCard();
+  if(c){
+   if(sharp(c)<3.5&&skip++<3)$("st").textContent="Kurang tajam: tahan HP, jauhkan sedikit & tunggu fokus";
+   else{skip=0;last=c;await pass(c);if(!live)return;const n=render();
+    $("st").textContent=`Memindai… ${n}/${FIELDS.length} data terbaca`;
+    if(best("nik")&&cyc>=2&&CORE.filter(k=>$("f_"+k).value.trim()).length>=8)return finish()}}
+ }catch(e){$("st").textContent="Error: "+e.message}
+ if(live)setTimeout(loop,250)}
+async function start(){
+ reset();
+ try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}},audio:false})}
+ catch(e){$("st").textContent="Kamera tidak bisa dibuka ("+e.name+"). Izinkan akses kamera, atau pakai Galeri.";return}
+ vid.srcObject=stream;await vid.play();
+ const tr=stream.getVideoTracks()[0],cp=tr.getCapabilities?tr.getCapabilities():{};
+ if(cp.focusMode&&cp.focusMode.includes("continuous"))tr.applyConstraints({advanced:[{focusMode:"continuous"}]}).catch(()=>{});
+ $("go").textContent="Berhenti";$("go").classList.add("stop");
+ try{await initOcr()}catch(e){stopLive();$("st").textContent="Gagal memuat OCR: "+e.message+" (cek internet)";return}
+ if(!stream)return;
+ live=true;frame.classList.add("live");$("st").textContent="Arahkan KTP ke dalam bingkai…";loop()}
+$("go").onclick=()=>stream?stopLive():start();
+
+/* ---------- galeri (fallback) ---------- */
+$("gal").onchange=async e=>{
+ const f=e.target.files[0];if(!f)return;stopLive();reset();
+ try{
+  $("st").textContent="Menyiapkan OCR…";await initOcr();
+  const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=URL.createObjectURL(f)});
+  $("st").textContent="Membaca gambar…";
+  if(Math.abs(img.width/img.height-RATIO)<.12){ // foto sudah terpotong pas KTP: pakai zona
+   const c=document.createElement("canvas");c.width=1200;c.height=Math.round(1200/RATIO);c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+   last=c;await pass(c);
+  }else{
+   const c=document.createElement("canvas"),s=Math.min(1,1600/img.width);c.width=img.width*s;c.height=img.height*s;
+   c.getContext("2d").drawImage(img,0,0,c.width,c.height);last=c;
+   await wTxt.setParameters({tessedit_pageseg_mode:"4"});
+   const r=await wTxt.recognize(bin(c));await wTxt.setParameters({tessedit_pageseg_mode:"6"});
+   $("raw").textContent=r.data.text;const o=parse(r.data.text);FIELDS.forEach(([k])=>vote(k,o[k],2));
+  }
+  const n=render();$("snapimg").src=last.toDataURL("image/jpeg",.8);$("snapimg").style.display="block";
+  $("st").textContent=n?"Selesai. Periksa & edit hasilnya.":"Tidak ada data terbaca. Coba foto lebih terang & lurus.";
+  $("res").scrollIntoView({behavior:"smooth"});
+ }catch(err){$("st").textContent="Gagal: "+err.message+" (cek koneksi internet)"}
+ e.target.value="";
+};
+
+/* ---------- ekspor ---------- */
+const get=()=>Object.fromEntries(FIELDS.map(([k])=>[k,$("f_"+k).value.trim()]));
+$("cp").onclick=async()=>{
+ const t=FIELDS.map(([k,l])=>l+": "+$("f_"+k).value.trim()).join("\n");
+ try{await navigator.clipboard.writeText(t);$("st").textContent="Tersalin."}catch(e){$("st").textContent="Gagal menyalin."}
+};
+function dl(name,mime,txt){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:mime}));a.download=name;a.click()}
+$("js").onclick=()=>dl("ktp.json","application/json",JSON.stringify(get(),null,2));
+$("cs").onclick=()=>{const o=get();dl("ktp.csv","text/csv",FIELDS.map(([k])=>k).join(",")+"\n"+FIELDS.map(([k])=>'"'+o[k].replace(/"/g,'""')+'"').join(","))};
+</script>
+</body>
+</html>
